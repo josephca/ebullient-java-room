@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package org.gameontext.sample;
+package org.gameontext.sample.rest;
 
 import javax.ws.rs.ApplicationPath;
 import javax.ws.rs.core.Application;

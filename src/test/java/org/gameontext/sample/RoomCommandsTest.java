@@ -276,7 +276,6 @@ public class RoomCommandsTest {
         }};
     }
 
-
     @Test
     public void testHandleAlmostLook(@Mocked Session session, @Mocked RoomEndpoint endpoint) {
         Message message = Message.createRoomMessage(roomImpl.roomId, TEST_ID, TEST_USERNAME, "/looks stuff");
@@ -303,8 +302,8 @@ public class RoomCommandsTest {
     }
 
     @Test
-    public void testHandlePing(@Mocked Session session, @Mocked RoomEndpoint endpoint) {
-        Message message = Message.createRoomMessage(roomImpl.roomId, TEST_ID, TEST_USERNAME, "/ping");
+    public void testHandleUse(@Mocked Session session, @Mocked RoomEndpoint endpoint) {
+        Message message = Message.createRoomMessage(roomImpl.roomId, TEST_ID, TEST_USERNAME, "/use");
 
         roomImpl.handleMessage(session, message, endpoint);
 
@@ -315,20 +314,44 @@ public class RoomCommandsTest {
             String s = m1.toString();
             System.out.println(s);
 
-            Assert.assertTrue("Message should be directed to all users, and of type event: " + s,
-                    s.startsWith("player,*,{\"type\":\"event\""));
+            Assert.assertTrue("Message should be directed to a specific user, and of type event: " + s,
+                    s.startsWith("player,testId,{\"type\":\"event\""));
 
             Assert.assertTrue("Message should contain content for the specific user: " + s,
-                    s.contains("\"testId\":\"Ping! Pong!"));
+                    s.contains("\"testId\":\"You have no idea how to use that"));
 
-            Assert.assertTrue("Message should contain content for everyone else: " + s,
-                    s.contains("\"*\":\"Ping! Pong sent to testUser"));
+            Assert.assertFalse("Message should not contain wildcard: " + s,
+                    s.contains("*"));
         }};
     }
 
     @Test
-    public void testHandlePingStuff(@Mocked Session session, @Mocked RoomEndpoint endpoint) {
-        Message message = Message.createRoomMessage(roomImpl.roomId, TEST_ID, TEST_USERNAME, "/ping stuff");
+    public void testHandleUseBooks(@Mocked Session session, @Mocked RoomEndpoint endpoint) {
+        Message message = Message.createRoomMessage(roomImpl.roomId, TEST_ID, TEST_USERNAME, "/use books");
+
+        roomImpl.handleMessage(session, message, endpoint);
+
+        new Verifications() {{
+            Message m1;
+            endpoint.sendMessage(session, m1 = withCapture()); times = 1;
+
+            String s = m1.toString();
+            System.out.println(s);
+
+            Assert.assertTrue("Message should be directed to specific player, and of type exit: " + s,
+                    s.startsWith("playerLocation,testId,{\"type\":\"exit\""));
+
+            Assert.assertTrue("Message should contain message about taking a book: " + s,
+                    s.contains("You take a book down from the shelf"));
+
+            Assert.assertTrue("Message should contain message about going west: " + s,
+                    s.contains("\"exitId\":\"W"));
+        }};
+    }
+    
+    @Test
+    public void testHandleUseTeddy(@Mocked Session session, @Mocked RoomEndpoint endpoint) {
+        Message message = Message.createRoomMessage(roomImpl.roomId, TEST_ID, TEST_USERNAME, "/use red teddy bear");
 
         roomImpl.handleMessage(session, message, endpoint);
 
@@ -343,10 +366,83 @@ public class RoomCommandsTest {
                     s.startsWith("player,*,{\"type\":\"event\""));
 
             Assert.assertTrue("Message should contain content for the specific user: " + s,
-                    s.contains("\"testId\":\"Ping! Pong! stuff"));
+                    s.contains("\"testId\":\"You pick up the teddy"));
 
             Assert.assertTrue("Message should contain content for everyone else: " + s,
-                    s.contains("\"*\":\"Ping! Pong sent to testUser: stuff"));
+                    s.contains("\"*\":\"The teddy bear squeaks!"));
+        }};
+    }
+    
+    @Test
+    public void testHandleUseMud(@Mocked Session session, @Mocked RoomEndpoint endpoint) {
+        Message message = Message.createRoomMessage(roomImpl.roomId, TEST_ID, TEST_USERNAME, "/use mud");
+
+        roomImpl.handleMessage(session, message, endpoint);
+
+        new Verifications() {{
+            Message m1;
+            endpoint.sendMessage(session, m1 = withCapture()); times = 1;
+
+            String s = m1.toString();
+            System.out.println(s);
+
+            Assert.assertTrue("Message should be directed to all users, and of type event: " + s,
+                    s.startsWith("player,*,{\"type\":\"event\""));
+
+            Assert.assertTrue("Message should contain content for the specific user: " + s,
+                    s.contains("\"testId\":\"You pat the big pile of mud."));
+
+            Assert.assertTrue("Message should contain content for everyone else: " + s,
+                    s.contains("\"*\":\"testUser has very dirty hands"));
+        }};
+    }
+    
+    @Test
+    public void testHandleUseMoonDiagram(@Mocked Session session, @Mocked RoomEndpoint endpoint) {
+        Message message = Message.createRoomMessage(roomImpl.roomId, TEST_ID, TEST_USERNAME, "/use moon diagram");
+
+        roomImpl.handleMessage(session, message, endpoint);
+
+        new Verifications() {{
+            Message m1;
+            endpoint.sendMessage(session, m1 = withCapture()); times = 1;
+
+            String s = m1.toString();
+            System.out.println(s);
+
+            Assert.assertTrue("Message should be directed to all users, and of type event: " + s,
+                    s.startsWith("player,*,{\"type\":\"event\""));
+
+            Assert.assertTrue("Message should contain content for the specific user: " + s,
+                    s.contains("\"testId\":\"You grab the moon diagram"));
+
+            Assert.assertTrue("Message should contain content for everyone else: " + s,
+                    s.contains("\"*\":\"testUser picks up the moon diagram"));
+        }};
+    }
+
+    @Test
+    public void testHandleUseMoon(@Mocked Session session, @Mocked RoomEndpoint endpoint) {
+        Message message = Message.createRoomMessage(roomImpl.roomId, TEST_ID, TEST_USERNAME, "/use moon");
+
+        roomImpl.handleMessage(session, message, endpoint);
+
+        new Verifications() {{
+            Message m1;
+            endpoint.sendMessage(session, m1 = withCapture()); times = 1;
+
+            String s = m1.toString();
+            System.out.println(s);
+
+            // unknown command
+            Assert.assertTrue("Message should be directed to specific user, and of type event: " + s,
+                    s.startsWith("player,testId,{\"type\":\"event\""));
+
+            Assert.assertTrue("Message should contain content for the specific user: " + s,
+                    s.contains("\"content\":{\"testId\":\"" ));
+
+            Assert.assertFalse("Message should not contain wildcard: " + s,
+                    s.contains("*"));
         }};
     }
 }
