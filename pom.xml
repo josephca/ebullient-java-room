@@ -24,7 +24,7 @@
         <!-- Liberty server properties -->
         <wlpServerName>gojava-room</wlpServerName>
         <testServerHttpPort>9080</testServerHttpPort>
-        <testServerHttpsPort>9443</testServerHttpsPort>
+        <testServerHttpsPort>-1</testServerHttpsPort>
         <!--This is set in the ibm-web-ext.xml file -->
         <warContext></warContext>
         <package.file>${project.build.directory}/${app.name}.zip</package.file>
@@ -194,14 +194,14 @@
                                     <goal>run</goal>
                                 </goals>
                                 <configuration>
-                                    <tasks>
+                                <target>
                                         <echo>Running bluemix profile with the following properties:
                                             cf.target=${cf.target}
                                             cf.space=${cf.space}
                                             cf.org=${cf.org}
                                             cf.username=${cf.username}
                                             The application will be accessed at context root ${cf.context.root}</echo>
-                                    </tasks>
+                                    </target>
                                 </configuration>
                             </execution>
                         </executions>
@@ -256,6 +256,41 @@
             <build>
                 <plugins>
                     <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>1.7</version>
+                        <executions>
+                            <execution>
+                                <id>envCreate</id>
+                                <phase>pre-integration-test</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <echo append="false" file="${liberty.install.dir}/usr/servers/${wlpServerName}/server.env">
+PORT=${testServerHttpPort}
+TARGET=test</echo>
+                                    </target>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>envDestroy</id>
+                                <phase>post-integration-test</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <delete>
+                                            <fileset dir="${liberty.install.dir}/usr/servers/${wlpServerName}/" includes="server.env" />
+                                        </delete>
+                                    </target>
+                                </configuration>
+                            </execution>
+                         </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>net.wasdev.wlp.maven.plugins</groupId>
                         <artifactId>liberty-maven-plugin</artifactId>
                         <executions>
@@ -296,7 +331,7 @@
                             <assemblyArtifact>
                                 <groupId>com.ibm.websphere.appserver.runtime</groupId>
                                 <artifactId>wlp-webProfile7</artifactId>
-                                <version>16.0.0.3</version>
+                                <version>16.0.0.4</version>
                                 <type>zip</type>
                             </assemblyArtifact>
                         </configuration>
@@ -429,6 +464,24 @@
                           </resources>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>copy-config</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                          <outputDirectory>${liberty.install.dir}/usr/servers/${wlpServerName}/</outputDirectory>
+                          <resources>
+                            <resource>
+                              <directory>src/main/liberty/config/</directory>
+                              <includes>
+                                <include>*.xml</include>
+                              </includes>
+                            </resource>
+                          </resources>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
             <!-- Enable liberty-maven plugin -->
@@ -442,10 +495,6 @@
                     <configFile>src/main/liberty/config/server.xml</configFile>
                     <packageFile>${package.file}</packageFile>
                     <include>${packaging.type}</include>
-                    <bootstrapProperties>
-                        <default.http.port>${testServerHttpPort}</default.http.port>
-                        <default.https.port>${testServerHttpsPort}</default.https.port>
-                    </bootstrapProperties>
                 </configuration>
                 <executions>
                     <execution>

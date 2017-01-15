@@ -1,0 +1,22 @@
+#!/bin/bash
+
+until $(curl -o /dev/null -s -I -f http://localhost:$PORT); do
+  echo "[warmup] Server not listening, retry"
+  sleep 5
+done
+
+for ROUTE in $WARMUP_ROUTES; do
+  echo "[warmup] calling $ROUTE"
+  RC=7
+  count=0
+
+  # RC=7 means the host isn't there yet. Let's do some re-trying until it
+  # does start / is ready
+  until [ "$RC" -eq 0 ] || [ "$count" -eq 10 ]; do
+    sleep 5
+    curl --fail -X GET "http://localhost:$PORT/$ROUTE" > /dev/null 2>&1
+    RC=$?
+    count=$((count+1))
+    echo "[warmup] call to $ROUTE returned $RC  ($count)"
+  done
+done
