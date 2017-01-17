@@ -1,4 +1,5 @@
 #!/bin/bash
+start=`date +%s`
 
 until $(curl -o /dev/null -s -I -f http://localhost:$PORT); do
   echo "[warmup] Server not listening, retry"
@@ -20,3 +21,6 @@ for ROUTE in $WARMUP_ROUTES; do
     echo "[warmup] call to $ROUTE returned $RC  ($count)"
   done
 done
+
+end=`date +%s`
+echo $((end - start))

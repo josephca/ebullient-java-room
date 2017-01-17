@@ -20,23 +20,23 @@
         <feature>cdi-1.2</feature>
     </featureManager>
 
-    <!-- This is required to prevent the web apps from being lazily loaded -->
-    <webContainer deferServletLoad="false"/>
-
-    <httpEndpoint host="*" httpPort="${env.PORT}" httpsPort="-1" id="defaultHttpEndpoint"/>
-
     <jndiEntry jndiName="mapUrl" value="${env.MAP_URL}"/>
     <jndiEntry jndiName="roomId" value="${env.ROOM_ID}"/>
 
+    <httpEndpoint host="*" httpPort="${env.PORT}" httpsPort="-1" id="defaultHttpEndpoint"/>
+
     <logging traceSpecification="*=info:org.gameontext.*=all:map.client=all"/>
+
+    <webApplication id="gojava" location="gojava-1.0-SNAPSHOT.war" name="gojava" contextRoot="/"/>
+
+    <!-- disable welcome page -->
+    <httpDispatcher enableWelcomePage="false" />
 
     <!-- This is required to prevent the web apps from being lazily loaded -->
     <webContainer deferServletLoad="false"/>
 
     <!-- The JVM can get confused about available CPU in virtualized envs -->
     <executor coreThreads="5"/>
-
-    <webApplication id="gojava" location="gojava-1.0-SNAPSHOT.war" name="gojava"/>
 
     <!-- Environment specific config.
          TARGET env variable must be set
